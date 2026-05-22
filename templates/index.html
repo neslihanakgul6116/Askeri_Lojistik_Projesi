@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hava Usleri Lojistik Takip Sistemi</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-slate-900 text-white min-h-screen flex items-center justify-center font-sans p-4">
+
+    <div class="bg-slate-800 p-8 rounded-2xl shadow-2xl max-w-2xl w-full border border-slate-700 relative">
+        
+        <div class="absolute top-4 right-4 flex items-center bg-slate-900/80 px-3 py-1 rounded-full border border-emerald-500/30">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse mr-2"></span>
+            <span class="text-[10px] font-mono text-emerald-400 tracking-wider">YETKİLİ: US_KOMUTANI_GIRIS_OK</span>
+        </div>
+
+        <h1 class="text-2xl font-bold mb-2 text-center text-amber-500 mt-4">Hava Askeri Ussu Lojistik Analiz Merkezi</h1>
+        <p class="text-slate-400 text-sm text-center mb-6">1 Yillik Envanter ve Parca Giris-Cikis Takip Sistemi</p>
+
+        <button id="baslatBtn" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-semibold py-3 px-4 rounded-xl transition duration-200 cursor-pointer shadow-lg shadow-amber-600/30">
+            Dev Envanter Verisini Yukle ve Analizi Baslat
+        </button>
+
+        <div id="ilerlemeAlani" class="mt-8 hidden">
+            <div class="flex justify-between mb-2">
+                <span class="text-sm font-medium text-amber-300">Buyuk Veri Filtreleme Durumu</span>
+                <span id="yuzdeYazi" class="text-sm font-bold text-amber-500">0%</span>
+            </div>
+            <div class="w-full bg-slate-700 rounded-full h-4 overflow-hidden">
+                <div id="cubuk" class="bg-amber-500 h-4 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div>
+            </div>
+            <p id="durumMesaj" class="text-xs text-slate-400 mt-2 text-center italic">Celery lojistik isçisi bekleniyor...</p>
+        </div>
+
+        <div id="grafikAlani" class="mt-8 hidden border-t border-slate-700 pt-6">
+            
+            <div class="mb-6 bg-red-950/40 border border-red-500/40 rounded-xl p-4 flex items-start space-x-3">
+                <div class="text-red-400 text-xl font-bold">⚠️</div>
+                <div>
+                    <h4 class="text-sm font-bold text-red-400 tracking-wide">KRİTİK ENVENTER SEVİYE ALARMI</h4>
+                    <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                        Yapılan büyük veri analizi sonucunda, <strong>Elektronik/Aviyonik</strong> ve <strong>Mühimmat Kitleri</strong> stok eşiğinin güvenli sınırın altına düştüğü tespit edilmiştir. Hangardaki jetlerin operasyonel hazırlık durumunun (Mission Capable) etkilenmemesi için acil tedarik emri oluşturulması önerilmektedir.
+                    </p>
+                </div>
+            </div>
+
+            <h3 class="text-md font-semibold text-center text-amber-300 mb-4">Kritik Seviyenin Altına Dusen Parca Sayisi</h3>
+            <div class="w-full h-64 flex justify-center">
+                <canvas id="raporGrafik"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let durumKontrolInterval;
+        const baslatBtn = document.getElementById('baslatBtn');
+        const ilerlemeAlani = document.getElementById('ilerlemeAlani');
+        const grafikAlani = document.getElementById('grafikAlani');
+        const cubuk = document.getElementById('cubuk');
+        const yuzdeYazi = document.getElementById('yuzdeYazi');
+        const durumMesaj = document.getElementById('durumMesaj');
+
+        baslatBtn.addEventListener('click', () => {
+            baslatBtn.disabled = true;
+            baslatBtn.innerText = "Envanter Isleniyor...";
+            ilerlemeAlani.classList.remove('hidden');
+            grafikAlani.classList.add('hidden');
+
+            fetch('http://127.0.0.1:5000/upload', { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                const taskId = data.task_id;
+                durumMesaj.innerText = "Dev envanter log dosyasi alindi, Celery analiz ediyor...";
+
+                durumKontrolInterval = setInterval(() => {
+                    fetch(`http://127.0.0.1:5000/durum/${taskId}`)
+                    .then(res => res.json())
+                    .then(statusData => {
+                        const yuzde = statusData.yuzde;
+                        cubuk.style.width = yuzde + '%';
+                        yuzdeYazi.innerText = yuzde + '%';
+
+                        if (statusData.durum === 'DEVAM_EDİYOR') {
+                            durumMesaj.innerText = "Milyonlarca giris-cikis kaydi taranip kritik parcalar ayiklaniyor...";
+                        } else if (statusData.durum === 'BİTTİ') {
+                            clearInterval(durumKontrolInterval);
+                            durumMesaj.className = "text-xs text-amber-400 mt-2 text-center font-bold";
+                            durumMesaj.innerText = "Analiz bitti. Kritik seviyedeki parca yogunluk grafigi hazir!";
+                            baslatBtn.innerText = "Analiz Tamamlandi";
+                            
+                            grafikAlani.classList.remove('hidden');
+                            izleGrafik();
+                        }
+                    });
+                }, 1000);
+            });
+        });
+
+        function izleGrafik() {
+            const ctx = document.getElementById('raporGrafik').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Jet Motor Parcalari', 'Elektronik/Aviyonik', 'Radar Bilesenleri', 'Muhimmat Kitleri'],
+                    datasets: [{
+                        label: 'Acil Tedarik Edilmesi Gereken Parca Sayisi',
+                        data: [45, 85, 20, 60],
+                        backgroundColor: 'rgba(245, 158, 11, 0.6)',
+                        borderColor: 'rgba(245, 158, 11, 1)',
+                        borderWidth: 2,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } },
+                        x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+                    },
+                    plugins: { legend: { labels: { color: '#f8fafc' } } }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
