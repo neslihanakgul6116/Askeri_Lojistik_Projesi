@@ -9,121 +9,202 @@
 </head>
 <body class="bg-slate-900 text-white min-h-screen flex items-center justify-center font-sans p-4">
 
-    <div class="bg-slate-800 p-8 rounded-2xl shadow-2xl max-w-2xl w-full border border-slate-700 relative">
-        
-        <div class="absolute top-4 right-4 flex items-center bg-slate-900/80 px-3 py-1 rounded-full border border-emerald-500/30">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse mr-2"></span>
-            <span class="text-[10px] font-mono text-emerald-400 tracking-wider">YETKİLİ: US_KOMUTANI_GIRIS_OK</span>
-        </div>
+<div class="bg-slate-800 p-8 rounded-2xl shadow-2xl max-w-3xl w-full border border-slate-700 relative">
 
-        <h1 class="text-2xl font-bold mb-2 text-center text-amber-500 mt-4">Hava Askeri Ussu Lojistik Analiz Merkezi</h1>
-        <p class="text-slate-400 text-sm text-center mb-6">1 Yillik Envanter ve Parca Giris-Cikis Takip Sistemi</p>
-
-        <button id="baslatBtn" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-semibold py-3 px-4 rounded-xl transition duration-200 cursor-pointer shadow-lg shadow-amber-600/30">
-            Dev Envanter Verisini Yukle ve Analizi Baslat
-        </button>
-
-        <div id="ilerlemeAlani" class="mt-8 hidden">
-            <div class="flex justify-between mb-2">
-                <span class="text-sm font-medium text-amber-300">Buyuk Veri Filtreleme Durumu</span>
-                <span id="yuzdeYazi" class="text-sm font-bold text-amber-500">0%</span>
-            </div>
-            <div class="w-full bg-slate-700 rounded-full h-4 overflow-hidden">
-                <div id="cubuk" class="bg-amber-500 h-4 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div>
-            </div>
-            <p id="durumMesaj" class="text-xs text-slate-400 mt-2 text-center italic">Celery lojistik isçisi bekleniyor...</p>
-        </div>
-
-        <div id="grafikAlani" class="mt-8 hidden border-t border-slate-700 pt-6">
-            
-            <div class="mb-6 bg-red-950/40 border border-red-500/40 rounded-xl p-4 flex items-start space-x-3">
-                <div class="text-red-400 text-xl font-bold">⚠️</div>
-                <div>
-                    <h4 class="text-sm font-bold text-red-400 tracking-wide">KRİTİK ENVENTER SEVİYE ALARMI</h4>
-                    <p class="text-xs text-slate-300 mt-1 leading-relaxed">
-                        Yapılan büyük veri analizi sonucunda, <strong>Elektronik/Aviyonik</strong> ve <strong>Mühimmat Kitleri</strong> stok eşiğinin güvenli sınırın altına düştüğü tespit edilmiştir. Hangardaki jetlerin operasyonel hazırlık durumunun (Mission Capable) etkilenmemesi için acil tedarik emri oluşturulması önerilmektedir.
-                    </p>
-                </div>
-            </div>
-
-            <h3 class="text-md font-semibold text-center text-amber-300 mb-4">Kritik Seviyenin Altına Dusen Parca Sayisi</h3>
-            <div class="w-full h-64 flex justify-center">
-                <canvas id="raporGrafik"></canvas>
-            </div>
-        </div>
+    <div class="absolute top-4 right-4 flex items-center bg-slate-900/80 px-3 py-1 rounded-full border border-emerald-500/30">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse mr-2"></span>
+        <span class="text-[10px] font-mono text-emerald-400 tracking-wider">YETKİLİ: US_KOMUTANI_GIRIS_OK</span>
     </div>
 
-    <script>
-        let durumKontrolInterval;
-        const baslatBtn = document.getElementById('baslatBtn');
-        const ilerlemeAlani = document.getElementById('ilerlemeAlani');
-        const grafikAlani = document.getElementById('grafikAlani');
-        const cubuk = document.getElementById('cubuk');
-        const yuzdeYazi = document.getElementById('yuzdeYazi');
-        const durumMesaj = document.getElementById('durumMesaj');
+    <h1 class="text-2xl font-bold mb-2 text-center text-amber-500 mt-4">Hava Askeri Ussu Lojistik Analiz Merkezi</h1>
+    <p class="text-slate-400 text-sm text-center mb-6">1 Yillik Envanter ve Parca Giris-Cikis Takip Sistemi</p>
 
-        baslatBtn.addEventListener('click', () => {
-            baslatBtn.disabled = true;
-            baslatBtn.innerText = "Envanter Isleniyor...";
-            ilerlemeAlani.classList.remove('hidden');
-            grafikAlani.classList.add('hidden');
+    <button id="baslatBtn" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-semibold py-3 px-4 rounded-xl transition duration-200 cursor-pointer shadow-lg shadow-amber-600/30">
+        Dev Envanter Verisini Yukle ve Analizi Baslat
+    </button>
 
-            fetch('http://127.0.0.1:5000/upload', { method: 'POST' })
-            .then(res => res.json())
-            .then(data => {
-                const taskId = data.task_id;
-                durumMesaj.innerText = "Dev envanter log dosyasi alindi, Celery analiz ediyor...";
+    <div id="ilerlemeAlani" class="mt-8 hidden">
+        <div class="flex justify-between mb-2">
+            <span class="text-sm font-medium text-amber-300">Buyuk Veri Filtreleme Durumu</span>
+            <span id="yuzdeYazi" class="text-sm font-bold text-amber-500">0%</span>
+        </div>
+        <div class="w-full bg-slate-700 rounded-full h-4 overflow-hidden">
+            <div id="cubuk" class="bg-amber-500 h-4 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div>
+        </div>
+        <p id="durumMesaj" class="text-xs text-slate-400 mt-2 text-center italic">Celery lojistik isçisi bekleniyor...</p>
+    </div>
 
-                durumKontrolInterval = setInterval(() => {
-                    fetch(`http://127.0.0.1:5000/durum/${taskId}`)
-                    .then(res => res.json())
-                    .then(statusData => {
-                        const yuzde = statusData.yuzde;
-                        cubuk.style.width = yuzde + '%';
-                        yuzdeYazi.innerText = yuzde + '%';
+    <div id="grafikAlani" class="mt-8 hidden border-t border-slate-700 pt-6">
 
-                        if (statusData.durum === 'DEVAM_EDİYOR') {
-                            durumMesaj.innerText = "Milyonlarca giris-cikis kaydi taranip kritik parcalar ayiklaniyor...";
-                        } else if (statusData.durum === 'BİTTİ') {
-                            clearInterval(durumKontrolInterval);
-                            durumMesaj.className = "text-xs text-amber-400 mt-2 text-center font-bold";
-                            durumMesaj.innerText = "Analiz bitti. Kritik seviyedeki parca yogunluk grafigi hazir!";
-                            baslatBtn.innerText = "Analiz Tamamlandi";
-                            
-                            grafikAlani.classList.remove('hidden');
-                            izleGrafik();
-                        }
-                    });
-                }, 1000);
-            });
+        <div class="mb-6 bg-red-950/40 border border-red-500/40 rounded-xl p-4 flex items-start space-x-3">
+            <div class="text-red-400 text-xl font-bold">⚠️</div>
+            <div>
+                <h4 class="text-sm font-bold text-red-400 tracking-wide">KRİTİK ENVANTER SEVİYE ALARMI</h4>
+                <p class="text-xs text-slate-300 mt-1">Stok eşiğinin altına düşen parçalar tespit edilmiştir. Veriler 5 saniyede bir güncellenmektedir.</p>
+            </div>
+        </div>
+
+        <div class="mb-4 flex gap-2 flex-wrap">
+            <input id="parcaAdi" type="text" placeholder="Parça adı" class="bg-slate-700 text-white text-sm px-3 py-2 rounded-lg flex-1 min-w-32 outline-none border border-slate-600 focus:border-amber-500">
+            <input id="stokMiktar" type="number" placeholder="Stok" class="bg-slate-700 text-white text-sm px-3 py-2 rounded-lg w-24 outline-none border border-slate-600 focus:border-amber-500">
+            <input id="esikMiktar" type="number" placeholder="Eşik" class="bg-slate-700 text-white text-sm px-3 py-2 rounded-lg w-24 outline-none border border-slate-600 focus:border-amber-500">
+            <button onclick="parcaEkle()" class="bg-amber-600 hover:bg-amber-500 text-white text-sm px-4 py-2 rounded-lg transition cursor-pointer">+ Ekle</button>
+        </div>
+
+        <div class="overflow-x-auto mb-6">
+            <table class="w-full text-sm text-left">
+                <thead>
+                    <tr class="border-b border-slate-600">
+                        <th class="py-2 px-3 text-amber-300">Parça Adı</th>
+                        <th class="py-2 px-3 text-amber-300">Mevcut Stok</th>
+                        <th class="py-2 px-3 text-amber-300">Kritik Eşik</th>
+                        <th class="py-2 px-3 text-amber-300">Durum</th>
+                        <th class="py-2 px-3 text-amber-300">İşlem</th>
+                    </tr>
+                </thead>
+                <tbody id="parcaTablo"></tbody>
+            </table>
+        </div>
+
+        <h3 class="text-md font-semibold text-center text-amber-300 mb-4">Kritik Seviyenin Altına Düşen Parça Sayısı</h3>
+        <div class="w-full h-64">
+            <canvas id="raporGrafik"></canvas>
+        </div>
+    </div>
+</div>
+
+<script>
+    let parcalar = [
+        { ad: 'Jet Motor Parçaları', stok: 45, esik: 50 },
+        { ad: 'Elektronik/Aviyonik', stok: 85, esik: 100 },
+        { ad: 'Radar Bileşenleri',   stok: 20, esik: 25 },
+        { ad: 'Mühimmat Kitleri',    stok: 60, esik: 75 }
+    ];
+
+    let grafik = null;
+    let interval = null;
+    let yenilemeInterval = null;
+
+    const baslatBtn = document.getElementById('baslatBtn');
+    const ilerlemeAlani = document.getElementById('ilerlemeAlani');
+    const grafikAlani = document.getElementById('grafikAlani');
+    const cubuk = document.getElementById('cubuk');
+    const yuzdeYazi = document.getElementById('yuzdeYazi');
+    const durumMesaj = document.getElementById('durumMesaj');
+
+    baslatBtn.addEventListener('click', () => {
+        baslatBtn.disabled = true;
+        baslatBtn.innerText = "Envanter Isleniyor...";
+        ilerlemeAlani.classList.remove('hidden');
+        grafikAlani.classList.add('hidden');
+
+        fetch('http://127.0.0.1:5000/upload', { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+            durumMesaj.innerText = "Celery analiz ediyor...";
+            interval = setInterval(() => {
+                fetch(`http://127.0.0.1:5000/durum/${data.task_id}`)
+                .then(res => res.json())
+                .then(s => {
+                    cubuk.style.width = s.yuzde + '%';
+                    yuzdeYazi.innerText = s.yuzde + '%';
+                    if (s.durum === 'BİTTİ') {
+                        clearInterval(interval);
+                        durumMesaj.className = "text-xs text-amber-400 mt-2 text-center font-bold";
+                        durumMesaj.innerText = "Analiz bitti. Kritik seviyedeki parca yogunluk grafigi hazir!";
+                        baslatBtn.innerText = "Analiz Tamamlandi";
+                        grafikAlani.classList.remove('hidden');
+                        tabloGuncelle();
+                        grafikOlustur();
+                        yenilemeInterval = setInterval(otomatikGuncelle, 5000);
+                    }
+                });
+            }, 1000);
         });
+    });
 
-        function izleGrafik() {
-            const ctx = document.getElementById('raporGrafik').getContext('2d');
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['Jet Motor Parcalari', 'Elektronik/Aviyonik', 'Radar Bilesenleri', 'Muhimmat Kitleri'],
-                    datasets: [{
-                        label: 'Acil Tedarik Edilmesi Gereken Parca Sayisi',
-                        data: [45, 85, 20, 60],
-                        backgroundColor: 'rgba(245, 158, 11, 0.6)',
-                        borderColor: 'rgba(245, 158, 11, 1)',
-                        borderWidth: 2,
-                        borderRadius: 8
-                    }]
+    function parcaEkle() {
+        const ad = document.getElementById('parcaAdi').value.trim();
+        const stok = parseInt(document.getElementById('stokMiktar').value);
+        const esik = parseInt(document.getElementById('esikMiktar').value);
+        if (!ad || isNaN(stok) || isNaN(esik)) return;
+        parcalar.push({ ad, stok, esik });
+        document.getElementById('parcaAdi').value = '';
+        document.getElementById('stokMiktar').value = '';
+        document.getElementById('esikMiktar').value = '';
+        tabloGuncelle();
+        grafikGuncelle();
+    }
+
+    function parcaSil(index) {
+        parcalar.splice(index, 1);
+        tabloGuncelle();
+        grafikGuncelle();
+    }
+
+    function tabloGuncelle() {
+        const tbody = document.getElementById('parcaTablo');
+        tbody.innerHTML = '';
+        parcalar.forEach((p, i) => {
+            const kritik = p.stok < p.esik;
+            const tr = document.createElement('tr');
+            tr.className = 'border-b border-slate-700';
+            tr.innerHTML = `
+                <td class="py-2 px-3">${p.ad}</td>
+                <td class="py-2 px-3 ${kritik ? 'text-red-400 font-bold' : 'text-green-400'}">${p.stok}</td>
+                <td class="py-2 px-3">${p.esik}</td>
+                <td class="py-2 px-3">${kritik ? '🔴 Kritik' : '🟢 Normal'}</td>
+                <td class="py-2 px-3"><button onclick="parcaSil(${i})" class="text-red-400 hover:text-red-300 text-xs cursor-pointer">🗑 Sil</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function grafikOlustur() {
+        const ctx = document.getElementById('raporGrafik').getContext('2d');
+        grafik = new Chart(ctx, {
+            type: 'bar',
+            data: grafikVerisi(),
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } },
+                    x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: { beginAtZero: true, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } },
-                        x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
-                    },
-                    plugins: { legend: { labels: { color: '#f8fafc' } } }
-                }
-            });
-        }
-    </script>
+                plugins: { legend: { labels: { color: '#f8fafc' } } }
+            }
+        });
+    }
+
+    function grafikVerisi() {
+        return {
+            labels: parcalar.map(p => p.ad),
+            datasets: [{
+                label: 'Mevcut Stok',
+                data: parcalar.map(p => p.stok),
+                backgroundColor: parcalar.map(p => p.stok < p.esik ? 'rgba(239,68,68,0.6)' : 'rgba(34,197,94,0.6)'),
+                borderColor: parcalar.map(p => p.stok < p.esik ? 'rgba(239,68,68,1)' : 'rgba(34,197,94,1)'),
+                borderWidth: 2,
+                borderRadius: 8
+            }]
+        };
+    }
+
+    function grafikGuncelle() {
+        if (!grafik) return;
+        grafik.data = grafikVerisi();
+        grafik.update('none');
+    }
+
+    function otomatikGuncelle() {
+        parcalar.forEach(p => {
+            const degisim = Math.floor(Math.random() * 5) - 2;
+            p.stok = Math.max(0, p.stok + degisim);
+        });
+        tabloGuncelle();
+        grafikGuncelle();
+    }
+</script>
 </body>
 </html>
